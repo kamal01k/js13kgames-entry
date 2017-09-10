@@ -431,12 +431,27 @@ Actor = function(type,id,x,y,spdX,spdY,width,height,color,hp,atkSpd){
 
 //#####
 Enemy = function(etype,id,x,y,spdX,spdY,width,height){
+	var Ehp = 10;
 	if(etype != null){
-		if(etype == 1)
-		var self = Actor('ship',id,x,y,spdX,spdY,width,height,'blue',20,1);
-		if(etype == 2)
-		var self = Actor('shipo',id,x,y,spdX,spdY,width,height,'orange',2,1);
+		if(etype == 1){
+			Ehp = 20;
+			if(Player.xp > 100){Ehp=50;}
+			if(Player.xp > 500){Ehp=100;}
+			if(Player.xp > 1000){Ehp=150;}
+			var self = Actor('ship',id,x,y,spdX,spdY,width,height,'blue',20,1);
+		}
+		if(etype == 2){
+			Ehp = 2;
+			if(Player.xp > 100){Ehp=5;}
+			if(Player.xp > 500){Ehp=10;}
+			if(Player.xp > 1000){Ehp=20;}
+			var self = Actor('shipo',id,x,y,spdX,spdY,width,height,'orange',2,1);
+		}
 	}else{
+		Ehp = 5;
+		if(Player.xp > 100){Ehp=10;}
+		if(Player.xp > 500){Ehp=50;}
+		if(Player.xp > 1000){Ehp=100;}
 		var self = Actor('enemy',id,x,y,spdX,spdY,width,height,'red',5,1);
 	}
 	Enemy.list[id] = self;
@@ -624,6 +639,7 @@ document.onkeyup = function(event){
 		player.pressingUp = false;
 }
 
+var pHXP = Player.xp;
 update = function(){
 	if(paused){
 		ctx.save();
@@ -636,19 +652,27 @@ update = function(){
 	ctx.clearRect(0,0,WIDTH,HEIGHT);
 	frameCount++;
 	score++;
-		
-	if(frameCount % 25 === 0){	//every 1 sec	
-		if(player.hpMax < player.hp)player.hp = player.hpMax;
+	if(player.hpMax < player.hp)player.hp = player.hpMax;
+	//player.atkSpd += 3;
+	
+	if(frameCount % 25 === 0){	//every 1 sec		
 		Timer += 1;
 		var tt = Player.timer;
 		var tf = Player.timer;
-		var x = Player.xp;
+		//var x = Player.xp;
 		if(Player.timer == 60){Player.timer=0;}else{Player.timer += 1;}		
 		if(tt == 50){tt=0;Enemy.randomlyGenerate(1);}
 		if(tf == 10){tf=0;Enemy.randomlyGenerate(2);}
 		if(tf == 20){tf=0;Enemy.randomlyGenerate();}
-		if(x == 100){x=0;player.hpMax += 10;player.hp = player.hpMax;}
-		else{x++;}
+		// xp based calculation		
+		if(Player.xp < 1000){
+			if(pHXP >= 100){pHXP=0;player.hpMax += 10;player.hp = player.hpMax;}
+			else{pHXP++;console.log(pHXP);}
+		}else{
+			if(Player.xp > 1000){player.hpMax = 200;player.hp = player.hpMax;}
+			if(Player.xp > 5000){player.hpMax = 300;player.hp = player.hpMax;}
+			if(Player.xp > 10000){player.hpMax = 500;player.hp = player.hpMax;}
+		}
 	}
 		
 
@@ -722,9 +746,9 @@ update = function(){
 			if(upgradeList[key].category === 'score')
 				score += 1000;
 			if(upgradeList[key].category === 'atkSpd')
-				player.atkSpd += 3;
+				score += 100;//player.atkSpd += 3;
 			if(upgradeList[key].category === 'health')
-				if(player.hpMax > player.hp)player.hp += 5;				
+				if(player.hpMax > player.hp)player.hp += 5;			
 			delete upgradeList[key];
 		}
 	}
@@ -784,6 +808,8 @@ startNewGame = function(){
 	coin = 0;
 	Player.xp = 1;
 	Timer = 0;
+	
+	Player.timer = 0;
 	Enemy.list = {};
 	upgradeList = {};
 	bulletList = {};
